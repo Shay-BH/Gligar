@@ -252,8 +252,12 @@ internal class ImagePickerActivity : AppCompatActivity(), LoadMoreListener.OnLoa
     }
 
     override fun onItemClicked(position: Int) {
+        var cameraPos = 0
+        if(mainViewModel.mCameraCisabled) {
+            cameraPos = -1
+        }//mCameraCisabled
         when (position) {
-            0 -> openCamera()
+            cameraPos -> openCamera()
             else -> {
                 mainViewModel.setImageSelection(position, mImagesAdapter?.images)
             }

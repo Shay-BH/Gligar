@@ -46,7 +46,7 @@ internal class PickerViewModel(private val savedStateHandle: SavedStateHandle) :
     private var mSelectedList = hashMapOf<String, ImageItem>()
     private var mCurrentSelection: Int = 0
     private var mLimit = 0
-    private var mCameraCisabled: Boolean = true
+    internal var mCameraCisabled: Boolean = true
 
     private lateinit var mImageDataSource: ImagesDataSource
     private lateinit var contentResolver: ContentResolver
@@ -59,7 +59,7 @@ internal class PickerViewModel(private val savedStateHandle: SavedStateHandle) :
             return
         }
         mLimit = extras.getInt(EXTRA_LIMIT, 0)
-        mCameraCisabled = extras.getBoolean(ImagePickerActivity.EXTRA_DISABLE_CAMERA, false)
+        mCameraCisabled = extras.getBoolean(ImagePickerActivity.EXTRA_DISABLE_CAMERA, true)
         mDirectCamera.value = extras.getBoolean(ImagePickerActivity.EXTRA_CAMERA_DIRECT, false)
     }
 
@@ -202,7 +202,14 @@ internal class PickerViewModel(private val savedStateHandle: SavedStateHandle) :
         mSelectedAlbum = savedStateHandle.get(SELECTED_ALBUM)
         mSelectedList = savedStateHandle.get(SELECTED_IMAGES) ?: hashMapOf()
         mCurrentSelection = savedStateHandle.get(CURRENT_SELECTION) ?: 0
-        mLimit = savedStateHandle.get(LIMIT) ?: 0
+        var statedLimit = savedStateHandle.get<Any>(LIMIT) ?: 100;
+        if(statedLimit == null || statedLimit !is Int){
+            mLimit = 100;
+        }
+        else{
+            mLimit = statedLimit;
+        }
+        //mLimit = savedStateHandle.get<Int>(LIMIT) ?: 0
         mCameraCisabled = savedStateHandle.get(DISABLE_CAMERA) ?: false
     }
 

@@ -5,6 +5,7 @@ import android.content.ContentUris
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.MediaStore
 import android.text.TextUtils
 import com.opensooq.OpenSooq.ui.imagePicker.model.AlbumItem
@@ -75,28 +76,48 @@ internal class ImagesDataSource(private val contentResolver: ContentResolver){
         val list: ArrayList<ImageItem> = arrayListOf()
         var photoCursor: Cursor? = null
         try {
-            if (albumItem == null || albumItem.isAll) {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+
+                val bundle = Bundle().apply {
+                    putInt(ContentResolver.QUERY_ARG_LIMIT, PAGE_SIZE)
+                    putInt(ContentResolver.QUERY_ARG_OFFSET, offset)
+                    putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, "${MediaStore.MediaColumns.DATE_MODIFIED} DESC")
+                }
+
                 photoCursor = contentResolver.query(
+                    getCursorUri(),
+                    arrayOf(
+                        ID_COLUMN,
+                        PATH_COLUMN
+                    ),
+                    bundle,
+                    null
+                )
+            }
+            else {
+                if (albumItem == null || albumItem.isAll) {
+                    photoCursor = contentResolver.query(
                         getCursorUri(),
                         arrayOf(
-                                ID_COLUMN,
-                                PATH_COLUMN
+                            ID_COLUMN,
+                            PATH_COLUMN
                         ),
                         null,
                         null,
-                        "$ORDER_BY"
-                )
-            } else {
-                photoCursor = contentResolver.query(
+                        "$ORDER_BY LIMIT $PAGE_SIZE OFFSET $offset"
+                    )
+                } else {
+                    photoCursor = contentResolver.query(
                         getCursorUri(),
                         arrayOf(
-                                ID_COLUMN,
-                                PATH_COLUMN
+                            ID_COLUMN,
+                            PATH_COLUMN
                         ),
                         "${MediaStore.Images.ImageColumns.BUCKET_ID} =?",
                         arrayOf(albumItem.bucketId),
-                        "$ORDER_BY"
-                )
+                        "$ORDER_BY LIMIT $PAGE_SIZE OFFSET $offset"
+                    )
+                }
             }
             photoCursor?.isAfterLast ?: return list
             photoCursor.doWhile {
